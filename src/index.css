@@ -1,5 +1,5 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Satoshi;
   line-height: 1.5;
   font-weight: 400;
 
@@ -7,12 +7,37 @@
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
+  --bg: #231F1F;
+  --purple: #7D31DE;
+  --blue: #67C0D2;
+  --text: #FFFFFF;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+@font-face {
+  font-family: 'Satoshi';
+  src: url('./fonts/Satoshi-Variable.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pixelify';
+  src: url('./fonts/PixelifySans.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+*:focus {
+  outline: none;
+}
 
+*:focus-visible {
+  outline: none;
+}
 a {
   font-weight: 500;
   color: #646cff;

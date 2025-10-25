@@ -1,0 +1,82 @@
+.play-root {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 320px 1fr 220px;
+  gap: 24px;
+  align-items: start;
+  padding: 28px;
+  box-sizing: border-box;
+  background: var(--bg);
+}
+
+.play-squares {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.play-left,
+.play-main,
+.play-right {
+  position: relative;
+  z-index: 1;
+}
+
+.play-panel {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 18px;
+  color: var(--text, #fff);
+  backdrop-filter: blur(6px) saturate(120%);
+  border: 1px solid var(--blue);
+}
+
+.controls label {
+  display: block;
+  margin-top: 8px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+
+.controls select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--blue);
+  background: var(--bg);
+  color: var(--text);
+  font-family: Pixelify;
+}
+
+.team-icons { display:flex; gap:8px; margin:8px 0 12px 0 }
+.team-icons .icon { width:36px; height:36px; border-radius:6px; background:var(--bg); border:1px solid var(--blue); color:var(--text); display:flex; align-items:center; justify-content:center; font-size:1rem; }
+
+.checkbox { display:flex; align-items:center; gap:8px; font-size:0.9rem; margin:8px 0 }
+
+.big-btn { margin-top:24px; width:100%; padding:14px; font-size:1.05rem; border-radius:10px; background:var(--purple); border:none; color:var(--text); cursor:pointer; }
+
+.links { margin-top:14px; display:flex; flex-direction:column; gap:10px; padding-top: 5vh; }
+.soft-btn { padding:10px; border-radius:8px; background:var(--blue); border:none; color:var(--text); cursor:pointer; margin-top: 6px; }
+
+.big-btn:focus,
+.soft-btn:focus,
+.join-btn:focus,
+.team-icons .icon:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.play-main { display:flex; justify-content:center; align-items:start }
+.news-panel { width:560px; padding:20px; background:var(--bg); border-radius:12px; color:var(--text); border:1px solid var(--blue); }
+.news-panel h3 { margin:0 0 14px 0; font-size:1.1rem }
+.news-panel h4 { margin:8px 0 6px 0 }
+
+.play-right { display:flex; justify-content:flex-end }
+.join-btn { padding:12px 18px; background:var(--purple); border-radius:10px; border:none; color:var(--text); cursor:pointer }
+
+@media (max-width: 900px) {
+  .play-root { grid-template-columns: 1fr; grid-template-rows: auto auto auto; padding:16px }
+  .play-right { justify-content:center }
+  .news-panel { width:100% }
+}
