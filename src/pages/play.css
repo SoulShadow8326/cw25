@@ -32,12 +32,42 @@
   border: 1px solid var(--blue);
 }
 
-.chat-list { min-width: 300px; width: 320px; display:flex; flex-direction:column; gap:12px }
+.chat-list { min-width: 300px; width: 320px; display:flex; flex-direction:column; gap:12px; padding:6px 0 }
 .chat-list h4 { margin:0 0 6px 0; font-size:1rem; font-weight:700 }
-.chat-room { border:2px solid var(--blue); padding:10px 12px; border-radius:8px; background: rgba(0,0,0,0.03); box-shadow: 0 8px 0 rgba(0,0,0,0.45); }
-.room-title { font-weight:700; display:inline-block }
-.room-count { float:right; font-family: Pixelify; font-size:0.95rem; background: transparent; border:2px solid var(--blue); padding:4px 8px; border-radius:6px }
-.room-desc { margin-top:16px; font-size:0.9rem; opacity:0.9 }
+.chat-room { border:2px solid rgba(0,0,0,0.08); padding:12px 14px; border-radius:10px; background: rgba(0,0,0,0.04); box-shadow: 0 8px 0 rgba(0,0,0,0.45); }
+.room-title { font-weight:700; display:inline-block; font-size:1.05rem }
+.room-count { float:right; font-family: Pixelify; font-size:0.95rem; background: transparent; border:3px solid var(--blue); padding:6px 10px; border-radius:8px }
+
+.chat-expanded {
+  width: 100%;
+  height: calc(100vh - 220px);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: linear-gradient(var(--bg), var(--bg)) padding-box, linear-gradient(var(--blue), var(--blue)) border-box;
+  border: 6px solid transparent;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.55);
+  padding-right: 50vw;
+}
+.chat-expanded-header { display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.03); cursor:pointer }
+.chat-expanded .room-title { font-size:1.5rem; letter-spacing:0.8px }
+.chat-expanded .room-count { border-radius:10px; padding:6px 10px; font-size:1rem }
+.chat-messages { flex:1; overflow:auto; padding:18px 12px; display:flex; flex-direction:column; gap:28px; align-items:center; justify-content:flex-start }
+.chat-messages .msg { background: rgba(255,255,255,0.02); padding:12px 18px; border-radius:10px; width:90%; max-width:520px; text-align:left; font-size:1.05rem }
+.chat-messages .who { font-weight:700; margin-right:6px }
+.chat-input-box { padding:6px 0 }
+.chat-input-box .chat-input { width:100%; padding:14px 16px; border-radius:12px; border:3px solid var(--blue); background:transparent; color:var(--text); font-size:1rem }
+.chat-input-box .chat-input::placeholder { color: rgba(255,255,255,0.35) }
+.room-desc { margin-top:16px; font-size:0.95rem; opacity:0.95 }
+
+.chat-list:has(.chat-expanded) > h4,
+.chat-list:has(.chat-expanded) > .chat-room {
+  display: none;
+}
 
 .controls label {
   display: block;

@@ -1,7 +1,40 @@
 import './play.css';
 import Squares from '../components/Squares';
+import { useState } from 'react';
 
 export default function Play() {
+  const [activeChat, setActiveChat] = useState(null);
+
+  function ChatRoom({ name, users, desc }) {
+    const open = activeChat === name;
+    if (open) {
+      return (
+        <div className="chat-expanded">
+          <div className="chat-expanded-header" onClick={() => setActiveChat(null)}>
+            <div className="room-title">{name}</div>
+            <div className="room-count">{users} users</div>
+          </div>
+          <div className="chat-messages">
+            <div className="msg"><span className="who">Mod:</span> Welcome to {name}.</div>
+            <div className="msg"><span className="who">User123:</span> hello!</div>
+            <div className="msg"><span className="who">You:</span> test message</div>
+          </div>
+          <div className="chat-input-box">
+            <input className="chat-input" placeholder={`Type to speak in ${name}`} />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="chat-room" onClick={() => setActiveChat(name)}>
+        <div className="room-title">{name}</div>
+        <div className="room-count">{users} users</div>
+        <div className="room-desc">{desc}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="play-root">
       <Squares className="play-squares" />
@@ -51,23 +84,22 @@ export default function Play() {
       <div className="play-right">
         <aside className="play-panel chat-list">
           <h4>Official chat rooms</h4>
-          <div className="chat-room">
-            <div className="room-title">Lobby</div>
-            <div className="room-count">516 users</div>
-            <div className="room-desc">Still haven't decided on a room for you? Relax here amidst the chaos.</div>
-          </div>
+          {(() => {
+            const rooms = [
+              { name: 'Lobby', users: 516, desc: "Still haven't decided on a room for you? Relax here amidst the chaos." },
+              { name: 'Tournaments', users: 228, desc: '24/7 room tournaments! Join and ascend the leaderboard :P' },
+              { name: 'Help', users: 175, desc: "Have a question about Showdown? We'd be glad to help you out!" },
+            ];
 
-          <div className="chat-room">
-            <div className="room-title">Tournaments</div>
-            <div className="room-count">228 users</div>
-            <div className="room-desc">24/7 room tournaments! Join and ascend the leaderboard :P</div>
-          </div>
+            if (activeChat) {
+              const r = rooms.find((x) => x.name === activeChat) || rooms[0];
+              return <ChatRoom name={r.name} users={r.users} desc={r.desc} />;
+            }
 
-          <div className="chat-room">
-            <div className="room-title">Help</div>
-            <div className="room-count">175 users</div>
-            <div className="room-desc">Have a question about Showdown? We'd be glad to help you out!</div>
-          </div>
+            return rooms.map((r) => (
+              <ChatRoom key={r.name} name={r.name} users={r.users} desc={r.desc} />
+            ));
+          })()}
         </aside>
       </div>
     </div>

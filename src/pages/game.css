@@ -76,7 +76,6 @@
 .sprite.player { left:6%; bottom:18px; }
 .sprite.opponent { right:6%; top:80px; }
 
-/* HUD overlays positioned above each sprite */
 .hud { position: absolute; z-index: 6; pointer-events: none; display:flex; flex-direction:column; gap:8px }
 .opponent-hud { right: 6%; top: 12px; align-items: flex-end; text-align: right }
 .player-hud { left: 6%; bottom: 48px; align-items: flex-start; text-align: left }

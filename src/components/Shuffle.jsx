@@ -89,7 +89,6 @@ const Shuffle = ({
         try {
           splitRef.current?.revert();
         } catch {
-          /* noop */
         }
         splitRef.current = null;
         playingRef.current = false;
