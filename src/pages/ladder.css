@@ -1,0 +1,77 @@
+.ladder-root {
+	position: fixed;
+	inset: 0;
+	background: var(--bg);
+	font-family: Satoshi;
+	color: var(--text);
+	display: flex;
+	align-items: flex-start;
+	gap: 32px;
+	padding: 40px;
+	box-sizing: border-box;
+}
+
+.ladder-squares { position: absolute; inset: 0; z-index: 0 }
+
+.ladder-container {
+	position: relative;
+	z-index: 1;
+    min-width: 75vw;
+    min-height: 90vh;
+	padding: 24px;
+	background: var(--bg);
+	border-radius: 14px;
+	border: 2px solid var(--blue);
+	box-sizing: border-box;
+	box-shadow: 0 18px 40px rgba(0,0,0,0.45), 0 0 0 6px rgba(83,203,214,0.06);
+}
+
+.ladder-title {
+	font-family: Pixelify, sans-serif;
+	font-size: 2rem;
+	margin: 0 0 18px 0;
+	text-align: left;
+}
+
+.ladder-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px }
+
+.ladder-item {
+	display: flex;
+	gap: 18px;
+	align-items: center;
+	padding: 12px 16px;
+	background: var(--bg);
+	border: 2px solid var(--blue);
+	border-radius: 10px;
+	box-shadow: 0 8px 0 rgba(0,0,0,0.45);
+	transition: transform 120ms ease;
+}
+.ladder-item:hover { transform: translateY(-4px) }
+
+.ladder-item .rank { font-family: Pixelify; font-size: 1.2rem; width: 56px; text-align: center; color: var(--text) }
+.ladder-item .meta { display:flex; justify-content:space-between; align-items:center; width:100% }
+.ladder-item .name { font-weight:700; font-size:1.05rem }
+.ladder-item .rating { font-family: Pixelify; font-size:1rem; background: transparent; padding:6px 10px; border-radius:6px; border:2px solid var(--blue); color:var(--text) }
+
+@media (max-width: 720px) {
+	.ladder-container { margin: 20px; padding: 18px }
+	.ladder-item { padding: 10px }
+	.ladder-root { flex-direction: column; padding: 16px }
+	.ladder-side { width: 100%; order: 2 }
+}
+
+.ladder-side {
+	width: 260px;
+	display:flex;
+	align-items:flex-start;
+	z-index: 2;
+}
+
+.timer-box { width: 100%; background: var(--bg); border:2px solid var(--blue); padding:16px; border-radius:10px; box-shadow: 0 16px 40px rgba(0,0,0,0.45); }
+.digital-timer { font-size: 2rem; text-align:center; margin-bottom:8px }
+.reset-hours { font-family: Pixelify; text-align:center; font-size:0.95rem }
+
+.ladder-footer { position: absolute; right: 24px; bottom: 24px; display:flex; justify-content:flex-end; z-index:3 }
+.back-btn { font-family: Pixelify, sans-serif; padding: 12px 20px; background: var(--purple); color: var(--text); border: 2px solid var(--purple); border-radius: 10px; cursor: pointer; margin-bottom: 2.5vh; margin-right: 2vw;}
+.back-btn:active { transform: translateY(3px); box-shadow: 0 4px 0 rgba(0,0,0,0.45) }
+

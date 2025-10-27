@@ -119,12 +119,12 @@
 
 
 .team { display:flex; gap:12px; flex-direction:column; width:100%; align-items:center }
-.team-slot { padding:18px 22px; border-radius:14px; background: var(--bg); border:2px solid var(--blue); color:var(--text); cursor:pointer; box-shadow: 0 8px 0 rgba(0,0,0,0.6); width:240px; text-align:center; font-size:26px; font-weight:700 }
-.team-slot:hover { transform: translateY(-3px); box-shadow: 0 10px 0 rgba(0,0,0,0.6) }
+.team-slot { padding:18px 22px; border-radius:6px; background: var(--bg); border:2px solid var(--blue); color:var(--text); cursor:pointer; box-shadow: none; width:240px; text-align:center; font-size:26px; font-weight:700; image-rendering: pixelated; -moz-image-rendering: pixelated; }
+.team-slot:hover { transform: translateY(-3px); box-shadow: none }
 
 @media (max-width: 900px) {
   .team-column { position: static; transform: none; width:100%; top:auto; left:auto; padding:0; }
-  .team-slot { width: 100%; font-size:16px; padding:10px 12px; border-radius:8px }
+  .team-slot { width: 100%; font-size:16px; padding:10px 12px; border-radius:6px; box-shadow: none }
 }
 
 

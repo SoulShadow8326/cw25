@@ -3,7 +3,7 @@ import { useRef, useState } from 'react';
 import battleScene from '../assets/battle.png';
 import fight1 from '../assets/fight_1.png';
 import fight2 from '../assets/fight_2.png';
-import explodeSound from '../assets/explode.wav';
+import explodeSound from '../assets/vine-boom-sound-effect(chosic.com).mp3';
 import './game.css';
 
 export default function Game() {

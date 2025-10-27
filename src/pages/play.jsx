@@ -27,11 +27,11 @@ export default function Play() {
 
           <label className="checkbox"><input type="checkbox" /> Don't allow spectators</label>
 
-          <button className="big-btn">Battle!</button>
+          <button className="big-btn" onClick={() => (window.location.href = '/game')}>Battle!</button>
 
           <div className="links">
             <button className="soft-btn">Teambuilder</button>
-            <button className="soft-btn">Ladder</button>
+            <button className="soft-btn" onClick={() => (window.location.href = '/ladder')}>Ladder</button>
             <button className="soft-btn">Tournaments</button>
           </div>
         </div>
@@ -49,7 +49,26 @@ export default function Play() {
       </div>
 
       <div className="play-right">
-        <button className="join-btn">Join chat</button>
+        <aside className="play-panel chat-list">
+          <h4>Official chat rooms</h4>
+          <div className="chat-room">
+            <div className="room-title">Lobby</div>
+            <div className="room-count">516 users</div>
+            <div className="room-desc">Still haven't decided on a room for you? Relax here amidst the chaos.</div>
+          </div>
+
+          <div className="chat-room">
+            <div className="room-title">Tournaments</div>
+            <div className="room-count">228 users</div>
+            <div className="room-desc">24/7 room tournaments! Join and ascend the leaderboard :P</div>
+          </div>
+
+          <div className="chat-room">
+            <div className="room-title">Help</div>
+            <div className="room-count">175 users</div>
+            <div className="room-desc">Have a question about Showdown? We'd be glad to help you out!</div>
+          </div>
+        </aside>
       </div>
     </div>
   );
