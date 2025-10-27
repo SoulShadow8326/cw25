@@ -1,15 +1,33 @@
 import Squares from '../components/Squares';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import battleScene from '../assets/battle.png';
 import fight1 from '../assets/fight_1.png';
 import fight2 from '../assets/fight_2.png';
 import explodeSound from '../assets/vine-boom-sound-effect(chosic.com).mp3';
+import trackGym from '../assets/bw2-kanto-gym-leader.ogg';
+import trackTrainer from '../assets/bw-trainer.ogg';
+import trackRival from '../assets/bw-rival.ogg';
 import './game.css';
 
 export default function Game() {
   const explodeRef = useRef(new Audio(explodeSound));
   const [oppHp, setOppHp] = useState(100);
   const [log, setLog] = useState([]);
+  const musicRef = useRef(null);
+  useEffect(() => {
+    const tracks = [trackGym, trackTrainer, trackRival];
+    const choice = tracks[Math.floor(Math.random() * tracks.length)];
+    musicRef.current = new Audio(choice);
+    musicRef.current.loop = true;
+    const p = musicRef.current.play();
+    if (p && p.catch) p.catch(() => {});
+    return () => {
+      if (musicRef.current) {
+        musicRef.current.pause();
+        musicRef.current = null;
+      }
+    };
+  }, []);
 
   const handleMove = (move) => {
     explodeRef.current.currentTime = 0;
@@ -76,7 +94,6 @@ export default function Game() {
           </div>
 
           <div className="chat-panel">
-            <div className="chat-messages"></div>
             <input className="chat-input" placeholder="Message" />
           </div>
         </aside>

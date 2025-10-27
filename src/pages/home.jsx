@@ -21,7 +21,7 @@ export default function Home() {
           respectReducedMotion={true}
         />
           <div className="home-actions">
-            <button className="pixel-btn">Enter</button>
+            <button className="pixel-btn" onClick={() => (window.location.href = '/play')}>Enter</button>
           </div>
       </main>
     </div>

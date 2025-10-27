@@ -1,9 +1,23 @@
 import './play.css';
 import Squares from '../components/Squares';
-import { useState } from 'react';
+import bgMusic from '../assets/UNDERTALE - Dating Start!.mp3';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Play() {
   const [activeChat, setActiveChat] = useState(null);
+  const audioRef = useRef(null);
+  useEffect(() => {
+    audioRef.current = new Audio(bgMusic);
+    audioRef.current.loop = true;
+    const p = audioRef.current.play();
+    if (p && p.catch) p.catch(() => {});
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   function ChatRoom({ name, users, desc }) {
     const open = activeChat === name;
