@@ -1,5 +1,5 @@
 import Squares from '../components/Squares';
-import Shuffle from '../components/shuffle';
+import Shuffle from '../components/Shuffle';
 import './home.css';
 import { useState, useEffect } from 'react';
 
