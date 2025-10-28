@@ -36,7 +36,7 @@ export default function Home() {
         '#' + [clamp(r), clamp(g), clamp(b)].map((n) => n.toString(16).padStart(2, '0')).join('')
       );
     }
-    const targetHex = '#d03131';
+    const targetHex = '#5F0C15';
     const root = document.documentElement;
     const computed = getComputedStyle(root).getPropertyValue('--colorA') || getComputedStyle(root).getPropertyValue('--blue') || '';
     const initialHex = computed.trim() || '#06193E';
@@ -91,7 +91,7 @@ export default function Home() {
   }, [isGod]);
   return (
     <div className="home-root">
-      <Squares className="play-squares" colorA={document.cookie && document.cookie.indexOf('GodGamer=1') !== -1 ? '#d03131' : squaresColor} />
+      <Squares className="play-squares" colorA={document.cookie && document.cookie.indexOf('GodGamer=1') !== -1 ? '#5F0C15' : squaresColor} />
       <main className="home-content">
         <Shuffle
           text="bulC thgiF"

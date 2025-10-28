@@ -71,7 +71,7 @@ export default function Game() {
         '#' + [clamp(r), clamp(g), clamp(b)].map((n) => n.toString(16).padStart(2, '0')).join('')
       );
     }
-    const targetHex = '#d03131';
+    const targetHex = '#5F0C15';
     const root = document.documentElement;
     const computed = getComputedStyle(root).getPropertyValue('--colorA') || getComputedStyle(root).getPropertyValue('--blue') || '';
     const initialHex = computed.trim() || '#06193E';
@@ -276,7 +276,7 @@ export default function Game() {
   const hpColor = (hp) => {
     const t = Math.max(0, Math.min(1, 1 - hp / 100));
     const green = hexToRgb('#10B981');
-    const red = hexToRgb('#d03131');
+    const red = hexToRgb('#5F0C15');
     const r = Math.round(green[0] + (red[0] - green[0]) * t);
     const g = Math.round(green[1] + (red[1] - green[1]) * t);
     const b = Math.round(green[2] + (red[2] - green[2]) * t);
@@ -284,7 +284,7 @@ export default function Game() {
   };
   return (
     <div className="game-root">
-      <Squares className="play-squares" colorA={document.cookie && document.cookie.indexOf('GodGamer=1') !== -1 ? '#d03131' : squaresColor} />
+      <Squares className="play-squares" colorA={document.cookie && document.cookie.indexOf('GodGamer=1') !== -1 ? '#5F0C15' : squaresColor} />
 
       <div className="game-main">
         <div className="battle-area">
@@ -325,7 +325,7 @@ export default function Game() {
 
                 <div className="hud opponent-hud">
                   <div className="poke-name">Volbeat</div>
-                  <div className="hp-bar"><div className={`hp-fill ${oppHp <= 25 ? 'low' : ''}`} style={{ width: `${oppHp}%`, background: oppVulnRef.current ? '#d03131' : hpColor(oppHp) }} /></div>
+                  <div className="hp-bar"><div className={`hp-fill ${oppHp <= 25 ? 'low' : ''}`} style={{ width: `${oppHp}%`, background: oppVulnRef.current ? '#5F0C15' : hpColor(oppHp) }} /></div>
                 </div>
 
                 <div className="hud player-hud">
