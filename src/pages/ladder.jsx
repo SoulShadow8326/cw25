@@ -37,7 +37,7 @@ export default function Ladder() {
 
 	useEffect(() => {
 		const root = document.documentElement;
-		const computed = getComputedStyle(root).getPropertyValue('--squares-colorA') || getComputedStyle(root).getPropertyValue('--colorA') || '#53cbd6';
+		const computed = getComputedStyle(root).getPropertyValue('--squares-colorA') || getComputedStyle(root).getPropertyValue('--colorA') || '#06193E';
 		setSquaresColor(computed.trim());
 	}, []);
 
@@ -63,7 +63,7 @@ export default function Ladder() {
 		const targetHex = '#d03131';
 		const root = document.documentElement;
 		const computed = getComputedStyle(root).getPropertyValue('--colorA') || getComputedStyle(root).getPropertyValue('--blue') || '';
-		const initialHex = computed.trim() || '#53cbd6';
+		const initialHex = computed.trim() || '#06193E';
 		const initialRgb = hexToRgb(initialHex.replace(/\s+/g, ''));
 		const targetRgb = hexToRgb(targetHex.replace(/\s+/g, ''));
 

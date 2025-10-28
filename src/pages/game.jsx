@@ -31,7 +31,7 @@ export default function Game() {
     const choice = tracks[Math.floor(Math.random() * tracks.length)];
     musicRef.current = new Audio(choice);
     musicRef.current.loop = true;
-  musicRef.current.volume = 0.18;
+  musicRef.current.volume = 0.10;
     const p = musicRef.current.play();
     if (p && p.catch) p.catch(() => {});
     return () => {
@@ -48,7 +48,7 @@ export default function Game() {
 
   useEffect(() => {
     const root = document.documentElement;
-    const computed = getComputedStyle(root).getPropertyValue('--squares-colorA') || getComputedStyle(root).getPropertyValue('--colorA') || '#53cbd6';
+    const computed = getComputedStyle(root).getPropertyValue('--squares-colorA') || getComputedStyle(root).getPropertyValue('--colorA') || '#06193E';
     setSquaresColor(computed.trim());
   }, []);
 
@@ -74,7 +74,7 @@ export default function Game() {
     const targetHex = '#d03131';
     const root = document.documentElement;
     const computed = getComputedStyle(root).getPropertyValue('--colorA') || getComputedStyle(root).getPropertyValue('--blue') || '';
-    const initialHex = computed.trim() || '#53cbd6';
+    const initialHex = computed.trim() || '#06193E';
     const initialRgb = hexToRgb(initialHex.replace(/\s+/g, ''));
     const targetRgb = hexToRgb(targetHex.replace(/\s+/g, ''));
 

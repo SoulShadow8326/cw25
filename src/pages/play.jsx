@@ -17,6 +17,7 @@ export default function Play() {
     }
     audioRef.current = new Audio(src);
     audioRef.current.loop = true;
+    audioRef.current.volume = 0.10;
     const p = audioRef.current.play();
     if (p && p.catch) p.catch(() => {});
     return () => {
@@ -33,7 +34,7 @@ export default function Play() {
 
   useEffect(() => {
     const root = document.documentElement;
-    const computed = getComputedStyle(root).getPropertyValue('--squares-colorA') || getComputedStyle(root).getPropertyValue('--colorA') || '#53cbd6';
+    const computed = getComputedStyle(root).getPropertyValue('--squares-colorA') || getComputedStyle(root).getPropertyValue('--colorA') || '#06193E';
     setSquaresColor(computed.trim());
   }, []);
 
@@ -59,7 +60,7 @@ export default function Play() {
     const targetHex = '#d03131';
     const root = document.documentElement;
     const computed = getComputedStyle(root).getPropertyValue('--colorA') || getComputedStyle(root).getPropertyValue('--blue') || '';
-    const initialHex = computed.trim() || '#53cbd6';
+    const initialHex = computed.trim() || '#06193E';
     const initialRgb = hexToRgb(initialHex.replace(/\s+/g, ''));
     const targetRgb = hexToRgb(targetHex.replace(/\s+/g, ''));
   function computeAndSet() {
