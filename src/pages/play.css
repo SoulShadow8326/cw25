@@ -54,8 +54,11 @@
   padding-right: 50vw;
 }
 .chat-expanded-header { display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.03); cursor:pointer }
-.chat-expanded .room-title { font-size:1.5rem; letter-spacing:0.8px }
-.chat-expanded .room-count { border-radius:10px; padding:6px 10px; font-size:1rem }
+.chat-expanded-header { position: relative; justify-content: center }
+.chat-expanded .room-title { font-size:1.5rem; letter-spacing:0.8px; margin-left:56px }
+.chat-expanded .room-count { border-radius:10px; padding:6px 10px; font-size:1rem; position:absolute; left:50%; transform:translateX(-50%) }
+
+.chat-expanded-header .mac-btns { position:absolute; left:12px; top:8px; display:flex; gap:8px; align-items:center }
 .chat-messages { flex:1; overflow:auto; padding:18px 12px; display:flex; flex-direction:column; gap:28px; align-items:center; justify-content:flex-start }
 .chat-messages .msg { background: rgba(255,255,255,0.02); padding:12px 18px; border-radius:10px; width:90%; max-width:520px; text-align:left; font-size:1.05rem }
 .chat-messages .who { font-weight:700; margin-right:6px }
@@ -117,3 +120,9 @@
   .play-right { justify-content:center }
   .news-panel { width:100% }
 }
+
+.mac-btn { width:14px; height:14px; border-radius:50%; border:0; padding:0; margin:0; display:inline-block }
+.mac-close { background:#ff5f57 }
+.mac-min { background:#ffbd2e }
+.mac-max { background:#28c940 }
+.chat-minimized { padding:8px 12px; border-radius:8px; background: rgba(0,0,0,0.06); display:flex; justify-content:space-between; align-items:center; cursor:pointer }

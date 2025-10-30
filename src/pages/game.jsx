@@ -16,12 +16,25 @@ export default function Game() {
   const [log, setLog] = useState([]);
   const [opponentAction, setOpponentAction] = useState(null);
   const oppTimerRef = useRef(null);
+  const oppHpRef = useRef(oppHp);
+  const playerHpRef = useRef(playerHp);
   const oppVulnRef = useRef(false);
   const oppVulnTimerRef = useRef(null);
   const startTimeRef = useRef(Date.now());
   const inputLockRef = useRef(false);
   const [timer, setTimer] = useState(99);
   const [gameOver, setGameOver] = useState(false);
+  const [winner, setWinner] = useState(null);
+  const [level, setLevel] = useState(1);
+  const [exp, setExp] = useState(0);
+  const [expTarget, setExpTarget] = useState(0);
+  const [showExpOverlay, setShowExpOverlay] = useState(false);
+  const [countdownRestart, setCountdownRestart] = useState(null);
+  const expIntervalRef = useRef(null);
+  const restartIntervalRef = useRef(null);
+  const startExpRef = useRef(null);
+  const finalTotalRef = useRef(null);
+  const levelRef = useRef(level);
   const countdownRef = useRef(null);
   const musicRef = useRef(null);
   const [isGod, setIsGod] = useState(false);
@@ -76,11 +89,12 @@ export default function Game() {
     const computed = getComputedStyle(root).getPropertyValue('--colorA') || getComputedStyle(root).getPropertyValue('--blue') || '';
     const initialHex = computed.trim() || '#06193E';
     const initialRgb = hexToRgb(initialHex.replace(/\s+/g, ''));
-    const targetRgb = hexToRgb(targetHex.replace(/\s+/g, ''));
-
+  const targetRgb = hexToRgb(targetHex);
+        
     function computeAndSet() {
       const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const today = new Date();
+        
       function parseEnvTimeStr(s) {
         const m = String(s || '').trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?([+-]\d{2}:\d{2})?$/);
         if (!m) return null;
@@ -150,7 +164,7 @@ export default function Game() {
   useEffect(() => {
     function pickMove() {
       if (oppTimerRef.current) clearTimeout(oppTimerRef.current);
-      if (oppHp <= 0 || playerHp <= 0 || gameOver) return;
+      if (oppHpRef.current <= 0 || playerHpRef.current <= 0 || gameOver) return;
       const moves = [
         { name: 'Kick', dmg: 20 },
         { name: 'Punch', dmg: 15 },
@@ -183,7 +197,15 @@ export default function Game() {
       }
       oppVulnRef.current = false;
     };
-  }, [oppHp, playerHp]);
+  }, [gameOver, level]);
+
+  useEffect(() => {
+    oppHpRef.current = oppHp;
+  }, [oppHp]);
+
+  useEffect(() => {
+    playerHpRef.current = playerHp;
+  }, [playerHp]);
 
   useEffect(() => {
     if (gameOver) {
@@ -221,13 +243,89 @@ export default function Game() {
   }, [gameOver]);
 
   useEffect(() => {
+    if (!gameOver) return;
+    if (winner === 'player') {
+      const gain = 30 + Math.floor(Math.random() * 21);
+      setExpTarget(gain);
+      setShowExpOverlay(true);
+      startExpRef.current = exp;
+      finalTotalRef.current = startExpRef.current + gain;
+      if (expIntervalRef.current) clearInterval(expIntervalRef.current);
+      expIntervalRef.current = setInterval(() => {
+        setExp((e) => {
+          const remaining = Math.max(0, finalTotalRef.current - e);
+          const step = Math.max(1, Math.ceil(remaining / 8));
+          const next = e + step;
+          if (next >= finalTotalRef.current) {
+            clearInterval(expIntervalRef.current);
+            expIntervalRef.current = null;
+            const total = finalTotalRef.current;
+            const threshold = levelRef.current * 100;
+            if (total >= threshold) {
+              setLevel((lv) => {
+                const nv = lv + 1;
+                levelRef.current = nv;
+                return nv;
+              });
+              setExp(total - threshold);
+            } else {
+              setExp(total);
+            }
+            setTimeout(() => {
+              setShowExpOverlay(false);
+              setCountdownRestart(5);
+            }, 600);
+            return Math.min(total, next);
+          }
+          return next;
+        });
+      }, 80);
+    } else {
+      setCountdownRestart(5);
+    }
+  }, [gameOver, winner]);
+
+  useEffect(() => {
+    if (countdownRestart == null) return;
+    if (restartIntervalRef.current) clearInterval(restartIntervalRef.current);
+    restartIntervalRef.current = setInterval(() => {
+      setCountdownRestart((c) => {
+        if (c <= 1) {
+          clearInterval(restartIntervalRef.current);
+          restartIntervalRef.current = null;
+          setCountdownRestart(null);
+          setGameOver(false);
+          setWinner(null);
+          setOppHp(100);
+          setPlayerHp(100);
+          setLog([]);
+          setTimer(99);
+          startTimeRef.current = Date.now();
+          return null;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => {
+      if (restartIntervalRef.current) clearInterval(restartIntervalRef.current);
+    };
+  }, [countdownRestart]);
+
+  useEffect(() => {
+    levelRef.current = level;
+  }, [level]);
+
+  useEffect(() => {
     if (gameOver) return;
     if (playerHp <= 0) {
       setGameOver(true);
       setLog((l) => [...l, `You fainted! Game Over`]);
+      setWinner('opponent');
     } else if (oppHp <= 0) {
       setGameOver(true);
+      setGameOver(true);
       setLog((l) => [...l, `Opponent fainted! You win!`]);
+      setWinner('player');
       const elapsed = Date.now() - startTimeRef.current;
       if (elapsed < 20000) {
         document.cookie = 'GodGamer=1; path=/; max-age=31536000';
@@ -341,6 +439,20 @@ export default function Game() {
 
           <div className="game_controls" />
         </div>
+
+            {showExpOverlay || countdownRestart != null ? (
+              <div className="exp-overlay">
+                <div className="exp-card">
+                  <div className="exp-title">Level {level}</div>
+                  <div>EXP</div>
+                  <div className="exp-bar">
+                    <div className="exp-fill" style={{ width: `${Math.round(((exp % (level * 100)) / (level * 100)) * 100)}%` }} />
+                  </div>
+                  <div className="exp-info"><div>EXP: {exp % (level * 100)}/{level * 100}</div><div>+{expTarget}</div></div>
+                  {countdownRestart != null ? (<div className="exp-countdown">Starting in {countdownRestart}</div>) : null}
+                </div>
+              </div>
+            ) : null}
 
         <aside className="game-sidebar">
           <div className="log-panel">

@@ -110,26 +110,90 @@ export default function Play() {
   }, [isGod]);
 
   function ChatRoom({ name, users, desc }) {
-    const open = activeChat === name;
+  const open = activeChat === name;
+    const storageKey = `cw25-chat-${name}`;
+    const bcRef = useRef(null);
+    const inputRef = useRef(null);
+    const listRef = useRef(null);
+    const [minimized, setMinimized] = useState(false);
+    const [messages, setMessages] = useState(() => {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    });
+    const usernameRef = useRef(localStorage.getItem('cw25-username') || `User${Math.floor(Math.random() * 9000) + 1000}`);
+    useEffect(() => {
+      localStorage.setItem('cw25-username', usernameRef.current);
+    }, []);
+    useEffect(() => {
+      try {
+        bcRef.current = new BroadcastChannel('cw25-chat');
+        bcRef.current.onmessage = (ev) => {
+          const m = ev.data;
+          if (m && m.room === name) {
+            setMessages((s) => {
+              const out = s.concat(m.msg);
+              try { localStorage.setItem(storageKey, JSON.stringify(out)); } catch (e) {}
+              return out;
+            });
+          }
+        };
+      } catch (e) {
+        bcRef.current = null;
+      }
+      return () => {
+        try { if (bcRef.current) bcRef.current.close(); } catch (e) {}
+      };
+    }, [name]);
+    useEffect(() => {
+      if (!open || minimized) return;
+      const el = listRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    }, [open, messages, minimized]);
+    function sendMessage(text) {
+      const t = String(text || '').trim();
+      if (!t) return;
+      const msg = { id: Date.now() + '-' + Math.random().toString(36).slice(2, 8), user: usernameRef.current, text: t, ts: Date.now() };
+      setMessages((s) => {
+        const out = s.concat(msg);
+        try { localStorage.setItem(storageKey, JSON.stringify(out)); } catch (e) {}
+        return out;
+      });
+      try { if (bcRef.current) bcRef.current.postMessage({ room: name, msg }); } catch (e) {}
+      if (inputRef.current) { inputRef.current.value = ''; inputRef.current.focus(); }
+    }
     if (open) {
-      return (
-        <div className="chat-expanded">
-          <div className="chat-expanded-header" onClick={() => setActiveChat(null)}>
+      if (minimized) {
+        return (
+          <div className="chat-minimized" onClick={() => setMinimized(false)}>
             <div className="room-title">{name}</div>
             <div className="room-count">{users} users</div>
           </div>
-          <div className="chat-messages">
-            <div className="msg"><span className="who">Mod:</span> Welcome to {name}.</div>
-            <div className="msg"><span className="who">User123:</span> hello!</div>
-            <div className="msg"><span className="who">You:</span> test message</div>
+        );
+      }
+      return (
+        <div className="chat-expanded">
+          <div className="chat-expanded-header">
+            <div className="mac-btns">
+              <button className="mac-btn mac-close" onClick={() => setActiveChat(null)} />
+              <button className="mac-btn mac-min" onClick={() => setMinimized(true)} />
+              <button className="mac-btn mac-max" onClick={() => {}} />
+            </div>
+          </div>
+          <div className="chat-messages" ref={listRef}>
+            {messages.map((m) => (
+              <div key={m.id} className="msg"><span className="who">{m.user}:</span> {m.text}</div>
+            ))}
           </div>
           <div className="chat-input-box">
-            <input className="chat-input" placeholder={`Type to speak in ${name}`} />
+            <input ref={inputRef} className="chat-input" placeholder={`Type to speak in ${name}`} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(e.target.value); } }} />
           </div>
         </div>
       );
     }
-
     return (
       <div className="chat-room" onClick={() => setActiveChat(name)}>
         <div className="room-title">{name}</div>
