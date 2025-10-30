@@ -5,6 +5,8 @@ import fight1 from '../assets/fight_1.png';
 import fight2 from '../assets/fight_2.png';
 import fight1Punch from '../assets/fight_1_punch.png';
 import fight1PunchAlt from '../assets/fight_1_punch_alt.png';
+import fight2Punch from '../assets/fight_2_punch.png';
+import fight2PunchAlt from '../assets/fight_2_punch_alt.png';
 import explodeSound from '../assets/vine-boom-sound-effect(chosic.com).mp3';
 import trackGym from '../assets/bw2-kanto-gym-leader.ogg';
 import trackTrainer from '../assets/bw-trainer.ogg';
@@ -36,6 +38,9 @@ export default function Game() {
   const [playerSpriteSrc, setPlayerSpriteSrc] = useState(fight1);
   const playerSpriteTimerRef = useRef(null);
   const punchAltRef = useRef(false);
+  const oppSpriteTimerRef = useRef(null);
+  const oppPunchAltRef = useRef(false);
+  const [oppSpriteSrc, setOppSpriteSrc] = useState(fight2);
   const handleMoveRef = useRef(null);
   const joyPrevDirRef = useRef(null);
   const startTimeRef = useRef(Date.now());
@@ -259,6 +264,14 @@ export default function Game() {
       setOpponentAction(choice.name);
       explodeRef.current.currentTime = 0;
       explodeRef.current.play();
+      if (oppSpriteTimerRef.current) clearTimeout(oppSpriteTimerRef.current);
+      const useAltOpp = oppPunchAltRef.current;
+      setOppSpriteSrc(useAltOpp ? fight2PunchAlt : fight2Punch);
+      oppPunchAltRef.current = !useAltOpp;
+      oppSpriteTimerRef.current = setTimeout(() => {
+        setOppSpriteSrc(fight2);
+        oppSpriteTimerRef.current = null;
+      }, 600);
       const actual = Math.max(1, Math.round(choice.dmg * (100 / (100 + playerDef))));
       if (blockingRef.current && !blockBrokenRef.current && !isStunned) {
         blockHitsRef.current = (blockHitsRef.current || 0) + 1;
@@ -635,7 +648,7 @@ export default function Game() {
                 </div>
 
                 <img src={playerSpriteSrc} alt="opponent" className="sprite player" style={{ filter: flash ? 'brightness(2) saturate(1.2)' : undefined, transition: 'filter 0.08s' }} />
-                <img src={fight2} alt="player" className="sprite opponent" />
+                <img src={oppSpriteSrc} alt="player" className="sprite opponent" />
               </div>
             </div>
           </div>
