@@ -8,6 +8,7 @@ import fight1PunchAlt from '../assets/fight_1_punch_alt.png';
 import fight2Punch from '../assets/fight_2_punch.png';
 import fight2PunchAlt from '../assets/fight_2_punch_alt.png';
 import explodeSound from '../assets/vine-boom-sound-effect(chosic.com).mp3';
+import blockSound from '../assets/block.mp3';
 import trackGym from '../assets/bw2-kanto-gym-leader.ogg';
 import trackTrainer from '../assets/bw-trainer.ogg';
 import trackRival from '../assets/bw-rival.ogg';
@@ -15,6 +16,7 @@ import './game.css';
 
 export default function Game() {
   const explodeRef = useRef(new Audio(explodeSound));
+  const blockRef = useRef(new Audio(blockSound));
   const [oppHp, setOppHp] = useState(100);
   const [playerHp, setPlayerHp] = useState(100);
   const [playerMax, setPlayerMax] = useState(100);
@@ -31,6 +33,7 @@ export default function Game() {
   const blockingRef = useRef(false);
   const [isBlocking, setIsBlocking] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [oppFlash, setOppFlash] = useState(false);
   const blockHitsRef = useRef(0);
   const blockBrokenRef = useRef(false);
   const [isStunned, setIsStunned] = useState(false);
@@ -83,7 +86,8 @@ export default function Game() {
   }, []);
 
   useEffect(() => {
-    if (explodeRef.current) explodeRef.current.volume = 0.75;
+    if (explodeRef.current) explodeRef.current.volume = 0.25;
+    if (blockRef.current) blockRef.current.volume = 1.00;
   }, []);
 
   useEffect(() => {
@@ -205,9 +209,7 @@ export default function Game() {
   const handleMove = (move) => {
     if (gameOver) return;
     if (inputLockRef.current) return;
-    inputLockRef.current = true;
-    explodeRef.current.currentTime = 0;
-    explodeRef.current.play();
+  inputLockRef.current = true;
     const baseMap = {
       Kick: 20,
       Punch: 15,
@@ -243,8 +245,23 @@ export default function Game() {
   const base = baseMap[move] ?? 25;
   const multiplier = (isGod ? 1.5 : 1) * (oppVulnRef.current ? 1.5 : 1);
   const dmg = Math.max(1, Math.round(base * (playerAtk / 100) * multiplier));
-    setOppHp((h) => Math.max(0, h - dmg));
-    setLog((l) => [...l, `You used ${move}!`]);
+    const oppBlocked = Math.random() < 0.40;
+    if (oppBlocked) {
+      setOppFlash(true);
+      setTimeout(() => setOppFlash(false), 120);
+      if (blockRef.current) {
+        blockRef.current.currentTime = 0;
+        blockRef.current.play();
+      }
+      setLog((l) => [...l, `Opponent blocked ${move}!`]);
+    } else {
+      if (explodeRef.current) {
+        explodeRef.current.currentTime = 0;
+        explodeRef.current.play();
+      }
+      setOppHp((h) => Math.max(0, h - dmg));
+      setLog((l) => [...l, `You used ${move}!`]);
+    }
     setTimeout(() => {
       inputLockRef.current = false;
     }, 800);
@@ -262,8 +279,7 @@ export default function Game() {
       ];
       const choice = moves[Math.floor(Math.random() * moves.length)];
       setOpponentAction(choice.name);
-      explodeRef.current.currentTime = 0;
-      explodeRef.current.play();
+      
       if (oppSpriteTimerRef.current) clearTimeout(oppSpriteTimerRef.current);
       const useAltOpp = oppPunchAltRef.current;
       setOppSpriteSrc(useAltOpp ? fight2PunchAlt : fight2Punch);
@@ -276,6 +292,10 @@ export default function Game() {
       if (blockingRef.current && !blockBrokenRef.current && !isStunned) {
         blockHitsRef.current = (blockHitsRef.current || 0) + 1;
         if (blockHitsRef.current <= 3) {
+          if (blockRef.current) {
+            blockRef.current.currentTime = 0;
+            blockRef.current.play();
+          }
           setFlash(true);
           setTimeout(() => setFlash(false), 120);
           setLog((l) => [...l, `Blocked ${choice.name}!`]);
@@ -296,6 +316,10 @@ export default function Game() {
           }, 5000);
         }
       } else {
+        if (explodeRef.current) {
+          explodeRef.current.currentTime = 0;
+          explodeRef.current.play();
+        }
         setPlayerHp((p) => Math.max(0, p - actual));
         setLog((l) => [...l, `Opponent used ${choice.name}!`]);
       }
@@ -306,10 +330,10 @@ export default function Game() {
         oppVulnTimerRef.current = null;
       }, 2000);
       const clearDelay = setTimeout(() => setOpponentAction(null), 600);
-      oppTimerRef.current = setTimeout(pickMove, 800 + Math.random() * 1200);
+  oppTimerRef.current = setTimeout(pickMove, 400 + Math.random() * 600);
       return () => clearTimeout(clearDelay);
     }
-    if (!gameOver) oppTimerRef.current = setTimeout(pickMove, 1200 + Math.random() * 800);
+  if (!gameOver) oppTimerRef.current = setTimeout(pickMove, 600 + Math.random() * 400);
     return () => {
       if (oppTimerRef.current) clearTimeout(oppTimerRef.current);
       oppTimerRef.current = null;
@@ -648,7 +672,7 @@ export default function Game() {
                 </div>
 
                 <img src={playerSpriteSrc} alt="opponent" className="sprite player" style={{ filter: flash ? 'brightness(2) saturate(1.2)' : undefined, transition: 'filter 0.08s' }} />
-                <img src={oppSpriteSrc} alt="player" className="sprite opponent" />
+                <img src={oppSpriteSrc} alt="player" className="sprite opponent" style={{ filter: oppFlash ? 'brightness(2) saturate(2.0)' : undefined, transition: 'filter 0.08s' }} />
               </div>
             </div>
           </div>
