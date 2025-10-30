@@ -231,7 +231,7 @@ export default function Play() {
           <button className="big-btn" onClick={() => (window.location.href = '/game')}>Battle!</button>
 
           <div className="links">
-            <button className="soft-btn">Teambuilder</button>
+            <button className="soft-btn" onClick={() => (window.location.href = '/teambuilder')}>Teambuilder</button>
             <button className="soft-btn" onClick={() => (window.location.href = '/ladder')}>Ladder</button>
             <button className="soft-btn">Tournaments</button>
           </div>

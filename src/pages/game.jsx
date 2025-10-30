@@ -3,6 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import battleScene from '../assets/battle.png';
 import fight1 from '../assets/fight_1.png';
 import fight2 from '../assets/fight_2.png';
+import fight1Punch from '../assets/fight_1_punch.png';
 import explodeSound from '../assets/vine-boom-sound-effect(chosic.com).mp3';
 import trackGym from '../assets/bw2-kanto-gym-leader.ogg';
 import trackTrainer from '../assets/bw-trainer.ogg';
@@ -13,6 +14,10 @@ export default function Game() {
   const explodeRef = useRef(new Audio(explodeSound));
   const [oppHp, setOppHp] = useState(100);
   const [playerHp, setPlayerHp] = useState(100);
+  const [playerMax, setPlayerMax] = useState(100);
+  const [playerAtk, setPlayerAtk] = useState(100);
+  const [playerDef, setPlayerDef] = useState(0);
+  const [oppMax, setOppMax] = useState(100);
   const [log, setLog] = useState([]);
   const [opponentAction, setOpponentAction] = useState(null);
   const oppTimerRef = useRef(null);
@@ -20,6 +25,16 @@ export default function Game() {
   const playerHpRef = useRef(playerHp);
   const oppVulnRef = useRef(false);
   const oppVulnTimerRef = useRef(null);
+  const blockingRef = useRef(false);
+  const [isBlocking, setIsBlocking] = useState(false);
+  const [flash, setFlash] = useState(false);
+  const blockHitsRef = useRef(0);
+  const blockBrokenRef = useRef(false);
+  const [isStunned, setIsStunned] = useState(false);
+  const stunTimerRef = useRef(null);
+  const [playerSpriteSrc, setPlayerSpriteSrc] = useState(fight1);
+  const playerSpriteTimerRef = useRef(null);
+  const handleMoveRef = useRef(null);
   const startTimeRef = useRef(Date.now());
   const inputLockRef = useRef(false);
   const [timer, setTimer] = useState(99);
@@ -36,6 +51,10 @@ export default function Game() {
   const finalTotalRef = useRef(null);
   const levelRef = useRef(level);
   const countdownRef = useRef(null);
+  const [playerWins, setPlayerWins] = useState(0);
+  const [oppWins, setOppWins] = useState(0);
+  const playerWinsRef = useRef(playerWins);
+  const oppWinsRef = useRef(oppWins);
   const musicRef = useRef(null);
   const [isGod, setIsGod] = useState(false);
   const [squaresColor, setSquaresColor] = useState(null);
@@ -57,6 +76,38 @@ export default function Game() {
 
   useEffect(() => {
     setIsGod(document.cookie && document.cookie.indexOf('GodGamer=1') !== -1);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const id = JSON.parse(localStorage.getItem('cw25-loadout') || 'null');
+      const mapping = {
+        striker: { hp: 80, atk: 90, def: 60 },
+        tank: { hp: 140, atk: 55, def: 110 },
+        speedster: { hp: 70, atk: 65, def: 50 },
+        balanced: { hp: 100, atk: 80, def: 80 },
+        techie: { hp: 85, atk: 75, def: 65 },
+        support: { hp: 95, atk: 60, def: 75 },
+        truefighter: { hp: 150, atk: 150, def: 150 },
+      };
+      if (id && mapping[id]) {
+        const s = mapping[id];
+        setPlayerMax(s.hp || 100);
+        setPlayerHp(s.hp || 100);
+        setPlayerAtk(s.atk || 100);
+        setPlayerDef(s.def || 0);
+      } else {
+        setPlayerMax(100);
+        setPlayerHp(100);
+        setPlayerAtk(100);
+        setPlayerDef(0);
+      }
+    } catch (e) {
+      setPlayerMax(100);
+      setPlayerHp(100);
+      setPlayerAtk(100);
+      setPlayerDef(0);
+    }
   }, []);
 
   useEffect(() => {
@@ -149,11 +200,35 @@ export default function Game() {
       Kick: 20,
       Punch: 15,
       Jump: 10,
-      Roll: 12,
+      Block: 0,
     };
+    if (move === 'Block') {
+      if (isStunned) {
+        inputLockRef.current = false;
+        return;
+      }
+      blockHitsRef.current = 0;
+      blockBrokenRef.current = false;
+      blockingRef.current = true;
+      setIsBlocking(true);
+      setTimeout(() => {
+        blockingRef.current = false;
+        setIsBlocking(false);
+        blockHitsRef.current = 0;
+        blockBrokenRef.current = false;
+      }, 300);
+      inputLockRef.current = false;
+      return;
+    }
+    if (playerSpriteTimerRef.current) clearTimeout(playerSpriteTimerRef.current);
+    setPlayerSpriteSrc(fight1Punch);
+    playerSpriteTimerRef.current = setTimeout(() => {
+      setPlayerSpriteSrc(fight1);
+      playerSpriteTimerRef.current = null;
+    }, 300);
   const base = baseMap[move] ?? 25;
   const multiplier = (isGod ? 1.5 : 1) * (oppVulnRef.current ? 1.5 : 1);
-  const dmg = Math.max(1, Math.round(base * multiplier));
+  const dmg = Math.max(1, Math.round(base * (playerAtk / 100) * multiplier));
     setOppHp((h) => Math.max(0, h - dmg));
     setLog((l) => [...l, `You used ${move}!`]);
     setTimeout(() => {
@@ -175,8 +250,33 @@ export default function Game() {
       setOpponentAction(choice.name);
       explodeRef.current.currentTime = 0;
       explodeRef.current.play();
-      setPlayerHp((p) => Math.max(0, p - choice.dmg));
-      setLog((l) => [...l, `Opponent used ${choice.name}!`]);
+      const actual = Math.max(1, Math.round(choice.dmg * (100 / (100 + playerDef))));
+      if (blockingRef.current && !blockBrokenRef.current && !isStunned) {
+        blockHitsRef.current = (blockHitsRef.current || 0) + 1;
+        if (blockHitsRef.current <= 3) {
+          setFlash(true);
+          setTimeout(() => setFlash(false), 120);
+          setLog((l) => [...l, `Blocked ${choice.name}!`]);
+        } else {
+          blockBrokenRef.current = true;
+          blockingRef.current = false;
+          setIsBlocking(false);
+          setIsStunned(true);
+          inputLockRef.current = true;
+          setLog((l) => [...l, `Block shattered! You are stunned`]);
+          if (stunTimerRef.current) clearTimeout(stunTimerRef.current);
+          stunTimerRef.current = setTimeout(() => {
+            setIsStunned(false);
+            inputLockRef.current = false;
+            blockBrokenRef.current = false;
+            blockHitsRef.current = 0;
+            stunTimerRef.current = null;
+          }, 5000);
+        }
+      } else {
+        setPlayerHp((p) => Math.max(0, p - actual));
+        setLog((l) => [...l, `Opponent used ${choice.name}!`]);
+      }
       if (oppVulnTimerRef.current) clearTimeout(oppVulnTimerRef.current);
       oppVulnRef.current = true;
       oppVulnTimerRef.current = setTimeout(() => {
@@ -296,8 +396,8 @@ export default function Game() {
           setCountdownRestart(null);
           setGameOver(false);
           setWinner(null);
-          setOppHp(100);
-          setPlayerHp(100);
+          setOppHp(oppMax);
+          setPlayerHp(playerMax);
           setLog([]);
           setTimer(99);
           startTimeRef.current = Date.now();
@@ -321,11 +421,13 @@ export default function Game() {
       setGameOver(true);
       setLog((l) => [...l, `You fainted! Game Over`]);
       setWinner('opponent');
+      setOppWins((w) => w + 1);
     } else if (oppHp <= 0) {
       setGameOver(true);
       setGameOver(true);
       setLog((l) => [...l, `Opponent fainted! You win!`]);
       setWinner('player');
+      setPlayerWins((w) => w + 1);
       const elapsed = Date.now() - startTimeRef.current;
       if (elapsed < 20000) {
         document.cookie = 'GodGamer=1; path=/; max-age=31536000';
@@ -334,23 +436,75 @@ export default function Game() {
   }, [playerHp, oppHp, gameOver]);
 
   useEffect(() => {
-    function onKey(e) {
+    try {
+      const stored = JSON.parse(localStorage.getItem('cw25-wins') || '{"player":0,"opponent":0}');
+      const p = Number(stored.player) || 0;
+      const o = Number(stored.opponent) || 0;
+      setPlayerWins(p);
+      setOppWins(o);
+      playerWinsRef.current = p;
+      oppWinsRef.current = o;
+    } catch (e) {
+      setPlayerWins(0);
+      setOppWins(0);
+      playerWinsRef.current = 0;
+      oppWinsRef.current = 0;
+    }
+  }, []);
+
+  useEffect(() => {
+    playerWinsRef.current = playerWins;
+    oppWinsRef.current = oppWins;
+    try {
+      localStorage.setItem('cw25-wins', JSON.stringify({ player: playerWins, opponent: oppWins }));
+    } catch (e) {}
+  }, [playerWins, oppWins]);
+
+  useEffect(() => {
+    function onKeyDown(e) {
       const active = document.activeElement && document.activeElement.tagName;
       if (active === 'INPUT' || active === 'TEXTAREA') return;
+      if (e.key === 'ArrowDown') {
+        if (isStunned) return;
+        if (!blockingRef.current) {
+          blockHitsRef.current = 0;
+          blockBrokenRef.current = false;
+          blockingRef.current = true;
+          setIsBlocking(true);
+        }
+        e.preventDefault();
+        return;
+      }
       const map = {
         ArrowUp: 'Kick',
         ArrowRight: 'Punch',
         ArrowLeft: 'Jump',
-        ArrowDown: 'Roll',
       };
       const move = map[e.key];
       if (move) {
         e.preventDefault();
-        handleMove(move);
+        if (handleMoveRef.current) handleMoveRef.current(move);
       }
     }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    function onKeyUp(e) {
+      if (e.key === 'ArrowDown') {
+        blockingRef.current = false;
+        setIsBlocking(false);
+        blockHitsRef.current = 0;
+        blockBrokenRef.current = false;
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      if (playerSpriteTimerRef.current) clearTimeout(playerSpriteTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    handleMoveRef.current = handleMove;
   }, [handleMove]);
 
   const hexToRgb = (h) => {
@@ -393,16 +547,16 @@ export default function Game() {
               <button className="team-slot">↑ to Kick</button>
               <button className="team-slot">→ to Punch</button>
               <button className="team-slot">← to Jump</button>
-              <button className="team-slot">↓ to Roll</button>
+              <button className="team-slot">↓ to Block</button>
             </div>
           </div>
 
           <div className="battle-box">
             <div className="mk-hud">
               <div className="mk-left">
-                <div className="mk-wins">00 WINS</div>
+                <div className="mk-wins">{String(playerWins).padStart(2, '0')} WINS</div>
                 <div className="mk-bar">
-                  <div className="mk-fill" style={{ width: `${playerHp}%` }} />
+                  <div className="mk-fill" style={{ width: `${Math.round((playerHp / Math.max(1, playerMax)) * 100)}%` }} />
                 </div>
                 <div className="mk-name">You</div>
               </div>
@@ -410,9 +564,9 @@ export default function Game() {
               <div className="mk-timer">{gameOver ? 'GAME OVER' : timer}</div>
 
               <div className="mk-right">
-                <div className="mk-wins">00 WINS</div>
+                <div className="mk-wins">{String(oppWins).padStart(2, '0')} WINS</div>
                 <div className="mk-bar">
-                  <div className="mk-fill" style={{ width: `${oppHp}%` }} />
+                  <div className="mk-fill" style={{ width: `${Math.round((oppHp / Math.max(1, oppMax)) * 100)}%` }} />
                 </div>
                 <div className="mk-name">Opponent</div>
               </div>
@@ -423,15 +577,15 @@ export default function Game() {
 
                 <div className="hud opponent-hud">
                   <div className="poke-name">Volbeat</div>
-                  <div className="hp-bar"><div className={`hp-fill ${oppHp <= 25 ? 'low' : ''}`} style={{ width: `${oppHp}%`, background: oppVulnRef.current ? '#5F0C15' : hpColor(oppHp) }} /></div>
+                  <div className="hp-bar"><div className={`hp-fill ${((oppHp / Math.max(1, oppMax)) * 100) <= 25 ? 'low' : ''}`} style={{ width: `${Math.round((oppHp / Math.max(1, oppMax)) * 100)}%`, background: oppVulnRef.current ? '#5F0C15' : hpColor(Math.round((oppHp / Math.max(1, oppMax)) * 100)) }} /></div>
                 </div>
 
                 <div className="hud player-hud">
                   <div className="poke-name">You</div>
-                  <div className="hp-bar"><div className={`hp-fill ${playerHp <= 25 ? 'low' : ''}`} style={{ width: `${playerHp}%`, background: hpColor(playerHp) }} /></div>
+                  <div className="hp-bar"><div className={`hp-fill ${((playerHp / Math.max(1, playerMax)) * 100) <= 25 ? 'low' : ''}`} style={{ width: `${Math.round((playerHp / Math.max(1, playerMax)) * 100)}%`, background: hpColor(Math.round((playerHp / Math.max(1, playerMax)) * 100)) }} /></div>
                 </div>
 
-                <img src={fight1} alt="opponent" className="sprite player" />
+                <img src={playerSpriteSrc} alt="opponent" className="sprite player" style={{ filter: flash ? 'brightness(2) saturate(1.2)' : undefined, transition: 'filter 0.08s' }} />
                 <img src={fight2} alt="player" className="sprite opponent" />
               </div>
             </div>
