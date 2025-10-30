@@ -37,7 +37,10 @@ def list_devices():
             devs = hid.enumerate()
         except Exception:
             devs = []
-        return {"right": devs, "left": []}
+        joy_devs = [d for d in devs if (d.get('vendor_id') == 1406) or (d.get('product_id') in (8198, 8199))]
+        left = [d for d in joy_devs if d.get('product_id') == 8198]
+        right = [d for d in joy_devs if d.get('product_id') == 8199]
+        return {"right": right, "left": left}
     try:
         r = get_R_id_list()
     except Exception:
@@ -52,9 +55,12 @@ def is_available():
         return False
     try:
         devs = hid.enumerate()
-        return bool(devs)
     except Exception:
-        return False
+        devs = []
+    for d in devs:
+        if d.get('vendor_id') == 1406 or d.get('product_id') in (8198, 8199):
+            return True
+    return False
 
 
 def poll_once():
