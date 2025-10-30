@@ -11,7 +11,10 @@ except Exception:
 try:
     import hid
 except Exception:
-    hid = None
+    try:
+        import hidapi as hid
+    except Exception:
+        hid = None
 
 joycon = None
 try:

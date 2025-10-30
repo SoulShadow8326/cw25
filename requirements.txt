@@ -1,2 +1,6 @@
 fastapi
 uvicorn[standard]
+joycon-python
+hidapi
+pyglm
+cython-hidapi
