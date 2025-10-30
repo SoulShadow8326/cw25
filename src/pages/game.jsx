@@ -4,6 +4,7 @@ import battleScene from '../assets/battle.png';
 import fight1 from '../assets/fight_1.png';
 import fight2 from '../assets/fight_2.png';
 import fight1Punch from '../assets/fight_1_punch.png';
+import fight1PunchAlt from '../assets/fight_1_punch_alt.png';
 import explodeSound from '../assets/vine-boom-sound-effect(chosic.com).mp3';
 import trackGym from '../assets/bw2-kanto-gym-leader.ogg';
 import trackTrainer from '../assets/bw-trainer.ogg';
@@ -34,6 +35,7 @@ export default function Game() {
   const stunTimerRef = useRef(null);
   const [playerSpriteSrc, setPlayerSpriteSrc] = useState(fight1);
   const playerSpriteTimerRef = useRef(null);
+  const punchAltRef = useRef(false);
   const handleMoveRef = useRef(null);
   const joyPrevDirRef = useRef(null);
   const startTimeRef = useRef(Date.now());
@@ -73,6 +75,10 @@ export default function Game() {
         musicRef.current = null;
       }
     };
+  }, []);
+
+  useEffect(() => {
+    if (explodeRef.current) explodeRef.current.volume = 0.75;
   }, []);
 
   useEffect(() => {
@@ -222,7 +228,9 @@ export default function Game() {
       return;
     }
     if (playerSpriteTimerRef.current) clearTimeout(playerSpriteTimerRef.current);
-    setPlayerSpriteSrc(fight1Punch);
+    const useAlt = punchAltRef.current;
+    setPlayerSpriteSrc(useAlt ? fight1PunchAlt : fight1Punch);
+    punchAltRef.current = !useAlt;
     playerSpriteTimerRef.current = setTimeout(() => {
       setPlayerSpriteSrc(fight1);
       playerSpriteTimerRef.current = null;
