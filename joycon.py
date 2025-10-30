@@ -8,6 +8,11 @@ except Exception:
     get_R_id = None
     get_R_id_list = None
 
+try:
+    import hid
+except Exception:
+    hid = None
+
 joycon = None
 try:
     if GyroTrackingJoyCon is not None and callable(get_R_id):
@@ -23,7 +28,13 @@ except Exception:
 
 def list_devices():
     if get_R_id_list is None:
-        return {"right": [], "left": []}
+        if hid is None:
+            return {"right": [], "left": []}
+        try:
+            devs = hid.enumerate()
+        except Exception:
+            devs = []
+        return {"right": devs, "left": []}
     try:
         r = get_R_id_list()
     except Exception:
@@ -32,14 +43,31 @@ def list_devices():
 
 
 def is_available():
-    return joycon is not None
+    if joycon is not None:
+        return True
+    if hid is None:
+        return False
+    try:
+        devs = hid.enumerate()
+        return bool(devs)
+    except Exception:
+        return False
 
 
 def poll_once():
     if joycon is None:
         return None
     try:
-        return {"pointer": joycon.pointer, "rotation": joycon.rotation, "direction": joycon.direction}
+        out = {"pointer": getattr(joycon, 'pointer', None), "rotation": getattr(joycon, 'rotation', None), "direction": getattr(joycon, 'direction', None)}
+        status = None
+        try:
+            status = getattr(joycon, 'status', None)
+            if callable(status):
+                status = status()
+        except Exception:
+            status = None
+        out['status'] = status
+        return out
     except Exception:
         return None
 

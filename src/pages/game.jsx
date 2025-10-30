@@ -35,6 +35,7 @@ export default function Game() {
   const [playerSpriteSrc, setPlayerSpriteSrc] = useState(fight1);
   const playerSpriteTimerRef = useRef(null);
   const handleMoveRef = useRef(null);
+  const joyPrevDirRef = useRef(null);
   const startTimeRef = useRef(Date.now());
   const inputLockRef = useRef(false);
   const [timer, setTimer] = useState(99);
@@ -506,6 +507,46 @@ export default function Game() {
   useEffect(() => {
     handleMoveRef.current = handleMove;
   }, [handleMove]);
+
+  useEffect(() => {
+    let iv = null;
+    let abort = false;
+    async function poll() {
+      try {
+        const res = await fetch('/api/joycon/poll');
+        if (!res.ok) return;
+        const j = await res.json();
+        if (!j || !j.available) return;
+        const s = j.state || {};
+        const dir = s.direction || (s.status && s.status.gyro && (s.status.gyro.y > 1000 ? 'up' : s.status.gyro.x > 1000 ? 'right' : s.status.gyro.x < -1000 ? 'left' : null));
+        if (dir && dir !== joyPrevDirRef.current) {
+          joyPrevDirRef.current = dir;
+          const map = { up: 'Kick', right: 'Punch', left: 'Jump' };
+          const mv = map[dir];
+          if (mv && handleMoveRef.current) handleMoveRef.current(mv);
+        }
+        const aPressed = !!(s.status && s.status.buttons && s.status.buttons.right && s.status.buttons.right.a);
+        if (aPressed) {
+          if (!blockingRef.current && !isStunned) {
+            blockHitsRef.current = 0;
+            blockBrokenRef.current = false;
+            blockingRef.current = true;
+            setIsBlocking(true);
+          }
+        } else {
+          if (blockingRef.current) {
+            blockingRef.current = false;
+            setIsBlocking(false);
+            blockHitsRef.current = 0;
+            blockBrokenRef.current = false;
+          }
+        }
+      } catch (e) {}
+    }
+    iv = setInterval(() => { if (!document.hidden) poll(); }, 120);
+    poll();
+    return () => { abort = true; if (iv) clearInterval(iv); };
+  }, [isStunned]);
 
   const hexToRgb = (h) => {
     const v = String(h || '').trim();
