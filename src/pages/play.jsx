@@ -1,8 +1,10 @@
 import './play.css';
-import Squares from '../components/Squares';
+import Hyperspeed from '../components/Hyperspeed';
 import bgMusic from '../assets/UNDERTALE - Dating Start!.mp3';
 import lavenderTrack from '../assets/Lavender Town.mp3';
 import { useState, useRef, useEffect } from 'react';
+import useKonami from '../components/useKonami';
+import { addMessage as dbAddMessage, getMessages as dbGetMessages, pruneRoom as dbPruneRoom } from '../utils/chatDb';
 
 export default function Play() {
   const [activeChat, setActiveChat] = useState(null);
@@ -31,6 +33,18 @@ export default function Play() {
   useEffect(() => {
     setIsGod(document.cookie && document.cookie.indexOf('GodGamer=1') !== -1);
   }, []);
+
+  // Konami toggles GodGamer (10s cooldown)
+  useKonami(() => {
+    const has = document.cookie && document.cookie.indexOf('GodGamer=1') !== -1;
+    if (has) {
+      document.cookie = 'GodGamer=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      setIsGod(false);
+    } else {
+      document.cookie = 'GodGamer=1; path=/; max-age=31536000';
+      setIsGod(true);
+    }
+  }, { cooldownMs: 10000 });
 
   useEffect(() => {
     const root = document.documentElement;
@@ -111,34 +125,65 @@ export default function Play() {
 
   function ChatRoom({ name, users, desc }) {
   const open = activeChat === name;
-    const storageKey = `cw25-chat-${name}`;
     const bcRef = useRef(null);
     const inputRef = useRef(null);
     const listRef = useRef(null);
     const [minimized, setMinimized] = useState(false);
-    const [messages, setMessages] = useState(() => {
-      try {
-        const raw = localStorage.getItem(storageKey);
-        return raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        return [];
-      }
-    });
+  const [messages, setMessages] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const loadingRef = useRef(false);
     const usernameRef = useRef(localStorage.getItem('cw25-username') || `User${Math.floor(Math.random() * 9000) + 1000}`);
     useEffect(() => {
       localStorage.setItem('cw25-username', usernameRef.current);
     }, []);
+    // Load existing messages from IndexedDB when room changes
+    useEffect(() => {
+      let abort = false;
+      async function load() {
+        try {
+          const page = 50;
+          const rows = await dbGetMessages(name, page);
+          if (!abort) {
+            setMessages(rows);
+            setHasMore(rows.length >= page);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      load();
+      return () => { abort = true; };
+    }, [name]);
+
+    async function loadOlder() {
+      if (loadingRef.current) return;
+      loadingRef.current = true;
+      try {
+        const oldest = messages.length ? messages[0].ts : undefined;
+        if (typeof oldest !== 'number') { setHasMore(false); return; }
+        const page = 50;
+        const older = await dbGetMessages(name, page, oldest - 1);
+        if (older && older.length) {
+          setMessages((s) => older.concat(s));
+          if (older.length < page) setHasMore(false);
+        } else {
+          setHasMore(false);
+        }
+      } catch (e) {
+        // ignore
+      } finally {
+        loadingRef.current = false;
+      }
+    }
     useEffect(() => {
       try {
         bcRef.current = new BroadcastChannel('cw25-chat');
         bcRef.current.onmessage = (ev) => {
           const m = ev.data;
           if (m && m.room === name) {
-            setMessages((s) => {
-              const out = s.concat(m.msg);
-              try { localStorage.setItem(storageKey, JSON.stringify(out)); } catch (e) {}
-              return out;
-            });
+            // persist to IndexedDB and update state; prune to last 500
+            dbAddMessage({ ...m.msg, room: name }).then(() => dbPruneRoom(name, 500)).catch(() => {});
+            setMessages((s) => s.concat(m.msg));
           }
         };
       } catch (e) {
@@ -157,11 +202,9 @@ export default function Play() {
       const t = String(text || '').trim();
       if (!t) return;
       const msg = { id: Date.now() + '-' + Math.random().toString(36).slice(2, 8), user: usernameRef.current, text: t, ts: Date.now() };
-      setMessages((s) => {
-        const out = s.concat(msg);
-        try { localStorage.setItem(storageKey, JSON.stringify(out)); } catch (e) {}
-        return out;
-      });
+      // persist then update local state, prune to last 500
+      dbAddMessage({ ...msg, room: name }).then(() => dbPruneRoom(name, 500)).catch(() => {});
+      setMessages((s) => s.concat(msg));
       try { if (bcRef.current) bcRef.current.postMessage({ room: name, msg }); } catch (e) {}
       if (inputRef.current) { inputRef.current.value = ''; inputRef.current.focus(); }
     }
@@ -184,6 +227,11 @@ export default function Play() {
             </div>
           </div>
           <div className="chat-messages" ref={listRef}>
+            {hasMore ? (
+              <button className="soft-btn" style={{ alignSelf:'center' }} onClick={loadOlder}>
+                Load older
+              </button>
+            ) : null}
             {messages.map((m) => (
               <div key={m.id} className="msg"><span className="who">{m.user}:</span> {m.text}</div>
             ))}
@@ -205,7 +253,56 @@ export default function Play() {
 
   return (
     <div className="play-root">
-  <Squares className="play-squares" colorA={document.cookie && document.cookie.indexOf('GodGamer=1') !== -1 ? '#5F0C15' : squaresColor} />
+      <div className="play-squares">
+        <Hyperspeed
+          effectOptions={{
+            onSpeedUp: () => { },
+            onSlowDown: () => { },
+            distortion: 'turbulentDistortion',
+            length: 400,
+            roadWidth: 10,
+            islandWidth: 2,
+            lanesPerRoad: 4,
+            fov: 90,
+            fovSpeedUp: 150,
+            speedUp: 2,
+            carLightsFade: 0.4,
+            totalSideLightSticks: 20,
+            lightPairsPerRoadWay: 40,
+            shoulderLinesWidthPercentage: 0.05,
+            brokenLinesWidthPercentage: 0.1,
+            brokenLinesLengthPercentage: 0.5,
+            lightStickWidth: [0.12, 0.5],
+            lightStickHeight: [1.3, 1.7],
+            movingAwaySpeed: [60, 80],
+            movingCloserSpeed: [-120, -160],
+            carLightsLength: [400 * 0.03, 400 * 0.2],
+            carLightsRadius: [0.05, 0.14],
+            carWidthPercentage: [0.3, 0.5],
+            carShiftX: [-0.8, 0.8],
+            carFloorSeparation: [0, 5],
+            colors: isGod ? {
+              roadColor: 0x5F0C15,
+              islandColor: 0x290609,
+              background: 0x0A0304,
+              shoulderLines: 0xC74B4B,
+              brokenLines: 0xFF6B6B,
+              leftCars: [0xFF4D4D, 0xC1272D, 0x8B0000],
+              rightCars: [0xFF7070, 0xD13C3C, 0xA40000],
+              sticks: 0xFF2E2E,
+            } : {
+              roadColor: 0x080808,
+              islandColor: 0x0a0a0a,
+              background: 0x000000,
+              shoulderLines: 0x67C0D2,
+              brokenLines: 0x67C0D2,
+              leftCars: [0x692CB7, 0x324555],
+              rightCars: [0x67C0D2, 0x03B3C3],
+              sticks: 0x67C0D2,
+            }
+          }}
+        />
+      </div>
 
       <div className="play-left">
         <div className="play-panel controls">
@@ -242,7 +339,7 @@ export default function Play() {
         <div className="news-panel">
           <h3>News</h3>
           <h4>Club Fan &amp; Fan Club</h4>
-          <p>OMG ADITYA DAS BIG FAN SIR. VERY VERY VERY VERY VERY VERY VERY VERY VERY VERY VERY VERY BIG FAN</p>
+          <p>OMG KEVIN BIG FAN SIR. VERY VERY VERY VERY VERY VERY VERY VERY VERY VERY VERY VERY BIG FAN</p>
 
           <h4>Gen 1 Random Battles Open</h4>
           <p>Lorem Ipsum dolor sit mamen afpiejapfjp idk atp</p>

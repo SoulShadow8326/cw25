@@ -1,4 +1,5 @@
-import Squares from '../components/Squares';
+import Hyperspeed from '../components/Hyperspeed';
+import useKonami from '../components/useKonami';
 import Shuffle from '../components/Shuffle';
 import './home.css';
 import { useState, useEffect } from 'react';
@@ -10,6 +11,18 @@ export default function Home() {
   useEffect(() => {
     setIsGod(document.cookie && document.cookie.indexOf('GodGamer=1') !== -1);
   }, []);
+
+  // Konami code toggles GodGamer cookie with cooldown
+  useKonami(() => {
+    const has = document.cookie && document.cookie.indexOf('GodGamer=1') !== -1;
+    if (has) {
+      document.cookie = 'GodGamer=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      setIsGod(false);
+    } else {
+      document.cookie = 'GodGamer=1; path=/; max-age=31536000';
+      setIsGod(true);
+    }
+  }, { cooldownMs: 10000 });
 
   useEffect(() => {
     const root = document.documentElement;
@@ -91,7 +104,58 @@ export default function Home() {
   }, [isGod]);
   return (
     <div className="home-root">
-      <Squares className="play-squares" colorA={document.cookie && document.cookie.indexOf('GodGamer=1') !== -1 ? '#5F0C15' : squaresColor} />
+      <div className="play-squares">
+        <Hyperspeed
+          effectOptions={{
+            onSpeedUp: () => { },
+            onSlowDown: () => { },
+            distortion: 'turbulentDistortion',
+            length: 400,
+            roadWidth: 10,
+            islandWidth: 2,
+            lanesPerRoad: 4,
+            fov: 90,
+            fovSpeedUp: 150,
+            speedUp: 2,
+            carLightsFade: 0.4,
+            totalSideLightSticks: 20,
+            lightPairsPerRoadWay: 40,
+            shoulderLinesWidthPercentage: 0.05,
+            brokenLinesWidthPercentage: 0.1,
+            brokenLinesLengthPercentage: 0.5,
+            lightStickWidth: [0.12, 0.5],
+            lightStickHeight: [1.3, 1.7],
+            movingAwaySpeed: [60, 80],
+            movingCloserSpeed: [-120, -160],
+            carLightsLength: [400 * 0.03, 400 * 0.2],
+            carLightsRadius: [0.05, 0.14],
+            carWidthPercentage: [0.3, 0.5],
+            carShiftX: [-0.8, 0.8],
+            carFloorSeparation: [0, 5],
+            colors: isGod ? {
+              // GodGamer ON: red palette
+              roadColor: 0x5F0C15,
+              islandColor: 0x290609,
+              background: 0x0A0304,
+              shoulderLines: 0xC74B4B,
+              brokenLines: 0xFF6B6B,
+              leftCars: [0xFF4D4D, 0xC1272D, 0x8B0000],
+              rightCars: [0xFF7070, 0xD13C3C, 0xA40000],
+              sticks: 0xFF2E2E,
+            } : {
+              // GodGamer OFF: blue/purple palette
+              roadColor: 0x080808,
+              islandColor: 0x0a0a0a,
+              background: 0x000000,
+              shoulderLines: 0x67C0D2,
+              brokenLines: 0x67C0D2,
+              leftCars: [0x692CB7, 0x324555],
+              rightCars: [0x67C0D2, 0x03B3C3],
+              sticks: 0x67C0D2,
+            }
+          }}
+        />
+      </div>
       <main className="home-content">
         <Shuffle
           text="bulC thgiF"

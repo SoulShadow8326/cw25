@@ -1,5 +1,6 @@
-import Squares from '../components/Squares';
+import Hyperspeed from '../components/Hyperspeed';
 import { useState, useEffect } from 'react';
+import useKonami from '../components/useKonami';
 import './ladder.css';
 
 function formatTime(ms) {
@@ -12,14 +13,14 @@ function formatTime(ms) {
 
 export default function Ladder() {
 	const [players] = useState([
-		{ id: 1, name: 'Vibhor', rating: 2120 },
-		{ id: 2, name: 'Link', rating: 2055 },
-		{ id: 3, name: 'wOw', rating: 1988 },
-		{ id: 4, name: 'UwU', rating: 1942 },
-		{ id: 5, name: 'tra', rating: 1890 },
-		{ id: 1, name: 'Fanboi', rating: 2120 },
-		{ id: 2, name: 'melike', rating: 2055 },
-		{ id: 3, name: 'proc0mm4', rating: 0 },
+		{ id: 1, name: 'Kevin', rating: 4242 },
+		{ id: 2, name: 'pr0coder', rating: 2442 },
+		{ id: 3, name: 'w0lfy', rating: 1988 },
+		{ id: 4, name: 'cw_fangurl', rating: 1942 },
+		{ id: 5, name: 'nuxe', rating: 1890 },
+		{ id: 1, name: 'wenaughty', rating: 1889 },
+		{ id: 2, name: 'melike', rating: 1888 },
+		{ id: 3, name: 'hypernova', rating: 0 },
 	]);
 
 	const [now, setNow] = useState(() => new Date());
@@ -34,6 +35,17 @@ export default function Ladder() {
 	useEffect(() => {
 		setIsGod(document.cookie && document.cookie.indexOf('GodGamer=1') !== -1);
 	}, []);
+
+	useKonami(() => {
+		const has = document.cookie && document.cookie.indexOf('GodGamer=1') !== -1;
+		if (has) {
+			document.cookie = 'GodGamer=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+			setIsGod(false);
+		} else {
+			document.cookie = 'GodGamer=1; path=/; max-age=31536000';
+			setIsGod(true);
+		}
+	}, { cooldownMs: 10000 });
 
 	useEffect(() => {
 		const root = document.documentElement;
@@ -120,7 +132,56 @@ export default function Ladder() {
 
 	return (
 		<div className="ladder-root">
-			<Squares className="play-squares" colorA={document.cookie && document.cookie.indexOf('GodGamer=1') !== -1 ? '#5F0C15' : squaresColor} />
+			<div className="play-squares">
+				<Hyperspeed
+					effectOptions={{
+						onSpeedUp: () => { },
+						onSlowDown: () => { },
+						distortion: 'turbulentDistortion',
+						length: 400,
+						roadWidth: 10,
+						islandWidth: 2,
+						lanesPerRoad: 4,
+						fov: 90,
+						fovSpeedUp: 150,
+						speedUp: 2,
+						carLightsFade: 0.4,
+						totalSideLightSticks: 20,
+						lightPairsPerRoadWay: 40,
+						shoulderLinesWidthPercentage: 0.05,
+						brokenLinesWidthPercentage: 0.1,
+						brokenLinesLengthPercentage: 0.5,
+						lightStickWidth: [0.12, 0.5],
+						lightStickHeight: [1.3, 1.7],
+						movingAwaySpeed: [60, 80],
+						movingCloserSpeed: [-120, -160],
+						carLightsLength: [400 * 0.03, 400 * 0.2],
+						carLightsRadius: [0.05, 0.14],
+						carWidthPercentage: [0.3, 0.5],
+						carShiftX: [-0.8, 0.8],
+						carFloorSeparation: [0, 5],
+						colors: isGod ? {
+							roadColor: 0x5F0C15,
+							islandColor: 0x290609,
+							background: 0x0A0304,
+							shoulderLines: 0xC74B4B,
+							brokenLines: 0xFF6B6B,
+							leftCars: [0xFF4D4D, 0xC1272D, 0x8B0000],
+							rightCars: [0xFF7070, 0xD13C3C, 0xA40000],
+							sticks: 0xFF2E2E,
+						} : {
+							roadColor: 0x080808,
+							islandColor: 0x0a0a0a,
+							background: 0x000000,
+							shoulderLines: 0x67C0D2,
+							brokenLines: 0x67C0D2,
+							leftCars: [0x692CB7, 0x324555],
+							rightCars: [0x67C0D2, 0x03B3C3],
+							sticks: 0x67C0D2,
+						}
+					}}
+				/>
+			</div>
 
 			<main className="ladder-container">
 				<h2 className="ladder-title">Ladder</h2>
