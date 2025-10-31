@@ -1,5 +1,6 @@
-import Squares from '../components/Squares';
+import Hyperspeed from '../components/Hyperspeed';
 import { useRef, useState, useEffect } from 'react';
+import useKonami from '../components/useKonami';
 import battleScene from '../assets/battle.png';
 import fight1 from '../assets/fight_1.png';
 import fight2 from '../assets/fight_2.png';
@@ -84,6 +85,20 @@ export default function Game() {
   useEffect(() => {
     setIsGod(document.cookie && document.cookie.indexOf('GodGamer=1') !== -1);
   }, []);
+
+  // Multiplayer room presence removed
+
+  // Konami toggle GodGamer (10s cooldown)
+  useKonami(() => {
+    const has = document.cookie && document.cookie.indexOf('GodGamer=1') !== -1;
+    if (has) {
+      document.cookie = 'GodGamer=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      setIsGod(false);
+    } else {
+      document.cookie = 'GodGamer=1; path=/; max-age=31536000';
+      setIsGod(true);
+    }
+  }, { cooldownMs: 10000 });
 
   useEffect(() => {
     try {
@@ -199,8 +214,12 @@ export default function Game() {
 
   const handleMove = (move) => {
     if (gameOver) return;
-    if (inputLockRef.current) return;
-    inputLockRef.current = true;
+    // Cooldown checks per move
+    const now = Date.now();
+    const cd = moveCooldownsRef.current[move] || 0;
+    const last = moveLastUsedRef.current[move] || 0;
+    if (now - last < cd) return;
+    moveLastUsedRef.current[move] = now;
     explodeRef.current.currentTime = 0;
     explodeRef.current.play();
     const baseMap = {
@@ -240,9 +259,11 @@ export default function Game() {
   const dmg = Math.max(1, Math.round(base * (playerAtk / 100) * multiplier));
     setOppHp((h) => Math.max(0, h - dmg));
     setLog((l) => [...l, `You used ${move}!`]);
-    setTimeout(() => {
-      inputLockRef.current = false;
-    }, 800);
+    // minor global input lock to avoid accidental double-press
+    if (!inputLockRef.current) {
+      inputLockRef.current = true;
+      setTimeout(() => { inputLockRef.current = false; }, 180);
+    }
   };
 
   useEffect(() => {
@@ -470,11 +491,30 @@ export default function Game() {
   }, [playerWins, oppWins]);
 
   useEffect(() => {
+    // Initialize move cooldowns (ms)
+    moveCooldownsRef.current = {
+      Kick: 700,
+      Punch: 500,
+      Jump: 400,
+      Block: 1000,
+    };
+  }, []);
+
+  const moveCooldownsRef = useRef({});
+  const moveLastUsedRef = useRef({});
+
+  useEffect(() => {
     function onKeyDown(e) {
       const active = document.activeElement && document.activeElement.tagName;
       if (active === 'INPUT' || active === 'TEXTAREA') return;
       if (e.key === 'ArrowDown') {
         if (isStunned) return;
+        // Block cooldown
+        const now = Date.now();
+        const cd = moveCooldownsRef.current['Block'] || 0;
+        const last = moveLastUsedRef.current['Block'] || 0;
+        if (now - last < cd) return;
+        moveLastUsedRef.current['Block'] = now;
         if (!blockingRef.current) {
           blockHitsRef.current = 0;
           blockBrokenRef.current = false;
@@ -585,7 +625,56 @@ export default function Game() {
   };
   return (
     <div className="game-root">
-      <Squares className="play-squares" colorA={document.cookie && document.cookie.indexOf('GodGamer=1') !== -1 ? '#5F0C15' : squaresColor} />
+      <div className="play-squares">
+        <Hyperspeed
+          effectOptions={{
+            onSpeedUp: () => { },
+            onSlowDown: () => { },
+            distortion: 'turbulentDistortion',
+            length: 400,
+            roadWidth: 10,
+            islandWidth: 2,
+            lanesPerRoad: 4,
+            fov: 90,
+            fovSpeedUp: 150,
+            speedUp: 2,
+            carLightsFade: 0.4,
+            totalSideLightSticks: 20,
+            lightPairsPerRoadWay: 40,
+            shoulderLinesWidthPercentage: 0.05,
+            brokenLinesWidthPercentage: 0.1,
+            brokenLinesLengthPercentage: 0.5,
+            lightStickWidth: [0.12, 0.5],
+            lightStickHeight: [1.3, 1.7],
+            movingAwaySpeed: [60, 80],
+            movingCloserSpeed: [-120, -160],
+            carLightsLength: [400 * 0.03, 400 * 0.2],
+            carLightsRadius: [0.05, 0.14],
+            carWidthPercentage: [0.3, 0.5],
+            carShiftX: [-0.8, 0.8],
+            carFloorSeparation: [0, 5],
+            colors: isGod ? {
+              roadColor: 0x5F0C15,
+              islandColor: 0x290609,
+              background: 0x0A0304,
+              shoulderLines: 0xC74B4B,
+              brokenLines: 0xFF6B6B,
+              leftCars: [0xFF4D4D, 0xC1272D, 0x8B0000],
+              rightCars: [0xFF7070, 0xD13C3C, 0xA40000],
+              sticks: 0xFF2E2E,
+            } : {
+              roadColor: 0x080808,
+              islandColor: 0x0a0a0a,
+              background: 0x000000,
+              shoulderLines: 0x67C0D2,
+              brokenLines: 0x67C0D2,
+              leftCars: [0x692CB7, 0x324555],
+              rightCars: [0x67C0D2, 0x03B3C3],
+              sticks: 0x67C0D2,
+            }
+          }}
+        />
+      </div>
 
       <div className="game-main">
         <div className="battle-area">
