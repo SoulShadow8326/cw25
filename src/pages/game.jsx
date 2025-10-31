@@ -46,6 +46,7 @@ export default function Game() {
   const [oppSpriteSrc, setOppSpriteSrc] = useState(fight2);
   const handleMoveRef = useRef(null);
   const joyPrevDirRef = useRef(null);
+  const gpConnectedRef = useRef(false);
   const startTimeRef = useRef(Date.now());
   const inputLockRef = useRef(false);
   const [timer, setTimer] = useState(99);
@@ -554,24 +555,38 @@ export default function Game() {
   }, [handleMove]);
 
   useEffect(() => {
-    let iv = null;
-    let abort = false;
-    async function poll() {
-      try {
-        const res = await fetch('/api/joycon/poll');
-        if (!res.ok) return;
-        const j = await res.json();
-        if (!j || !j.available) return;
-        const s = j.state || {};
-        const dir = s.direction || (s.status && s.status.gyro && (s.status.gyro.y > 1000 ? 'up' : s.status.gyro.x > 1000 ? 'right' : s.status.gyro.x < -1000 ? 'left' : null));
-        if (dir && dir !== joyPrevDirRef.current) {
+    let raf = null;
+    let lastDir = joyPrevDirRef.current;
+    const threshold = 0.5;
+    function update() {
+      const gps = navigator.getGamepads && navigator.getGamepads();
+      const gp = (gps && gps.length) ? gps[0] : null;
+      const isConnected = !!gp;
+      if (isConnected && !gpConnectedRef.current) {
+        gpConnectedRef.current = true;
+        console.log('joycon connected');
+      } else if (!isConnected && gpConnectedRef.current) {
+        gpConnectedRef.current = false;
+        console.log('joycon disconnected');
+      }
+      if (gp) {
+        const lx = gp.axes && gp.axes.length > 0 ? gp.axes[0] : 0;
+        const ly = gp.axes && gp.axes.length > 1 ? gp.axes[1] : 0;
+        const left = lx < -threshold;
+        const right = lx > threshold;
+        const up = ly < -threshold;
+        const dir = up ? 'up' : right ? 'right' : left ? 'left' : null;
+        if (dir !== lastDir) {
+          lastDir = dir;
           joyPrevDirRef.current = dir;
-          const map = { up: 'Kick', right: 'Punch', left: 'Jump' };
+          const map = { up: 'Kick', right: 'Punch', left: 'Jump' };''
           const mv = map[dir];
           if (mv && handleMoveRef.current) handleMoveRef.current(mv);
         }
-        const aPressed = !!(s.status && s.status.buttons && s.status.buttons.right && s.status.buttons.right.a);
-        if (aPressed) {
+        const zlPressed = gp.buttons && gp.buttons[6] && gp.buttons[6].pressed;
+        const zrPressed = gp.buttons && gp.buttons[7] && gp.buttons[7].pressed;
+        const blockHeld = !!(zlPressed || zrPressed);
+        if (blockHeld) {
           if (!blockingRef.current && !isStunned) {
             blockHitsRef.current = 0;
             blockBrokenRef.current = false;
@@ -586,11 +601,11 @@ export default function Game() {
             blockBrokenRef.current = false;
           }
         }
-      } catch (e) {}
+      }
+      raf = requestAnimationFrame(update);
     }
-    iv = setInterval(() => { if (!document.hidden) poll(); }, 120);
-    poll();
-    return () => { abort = true; if (iv) clearInterval(iv); };
+    raf = requestAnimationFrame(update);
+    return () => { if (raf) cancelAnimationFrame(raf); };
   }, [isStunned]);
 
   const hexToRgb = (h) => {
